@@ -15,12 +15,51 @@
  **/
 
 
+#include "commandlineprocessor.h"
 #include <QCoreApplication>
+#include <QString>
+#include <QMutex>
+#include <QMutexLocker>
+#include <QtDebug>
+#include <cstdio>
+
+void messageOutput(QtMsgType type, const QMessageLogContext& context, const QString& msg);
 
 int main(int argc, char* argv[])
 {
+    qSetMessagePattern("%{if-debug}Debug: %{endif}"
+                       "%{if-warning}Warning: %{endif}"
+                       "%{if-critical}Critical: %{endif}"
+                       "%{if-fatal}Fatal: %{endif}"
+                       "%{if-category}<%{category}>: %{endif}"
+#ifdef QT_DEBUG
+                       "[%{time yyyyMMdd h:mm:ss.zzz}] "
+#endif
+                       "%{if-debug}%{file}:%{line}{%{function}}: %{endif}"
+                       "%{message}");
+    qInstallMessageHandler(messageOutput);
+
     QCoreApplication app(argc,argv);
     app.setApplicationVersion(VERSION_STR);
     app.setApplicationName(APP_FULL_NAME);
-    return 0;
+
+    CommandLineProcessor processor;
+    processor.process(app.arguments());
+
+    return EXIT_SUCCESS;
+}
+
+static QMutex messageMutex;
+
+void messageOutput(QtMsgType type, const QMessageLogContext& context, const QString& msg)
+{
+    QMutexLocker locker(&messageMutex);
+    QString format = qFormatLogMessage(type,context,msg);
+    std::fputs(qUtf8Printable(format),stderr);
+    std::fflush(stderr);
+    if (type == QtFatalMsg)
+    {
+        locker.unlock();
+        std::exit(EXIT_FAILURE);
+    }
 }

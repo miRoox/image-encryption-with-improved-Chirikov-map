@@ -7,8 +7,9 @@ DESTDIR = $$BIN_PATH
 LIBS *= \
     -l$$qtLibraryName(IChirikov)
 
-SOURCES += main.cpp
+SOURCES += main.cpp \
+    commandlineprocessor.cpp
 
 
 HEADERS += \
-
+    commandlineprocessor.h
