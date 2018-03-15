@@ -32,5 +32,8 @@ struct Key
     qreal k, h, x, y;
 };
 
+extern QDataStream& operator<<(QDataStream& stream, const Key& key);
+extern QDataStream& operator>>(QDataStream& stream, Key& key);
+
 }
 

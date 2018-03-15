@@ -76,4 +76,28 @@ namespace Shuttle {
 
 } //Shuttle
 
+constexpr quint32 KeyMask = 0xFFCBC5D9u;
+
+QDataStream& operator<<(QDataStream& stream, const Key& key)
+{
+    return stream << KeyMask << key.k << key.h << key.x << key.y;
+}
+
+QDataStream& operator>>(QDataStream& stream, Key& key)
+{
+    quint32 mask;
+    stream >> mask;
+    if (mask != KeyMask)
+    {
+        stream.setStatus(QDataStream::ReadCorruptData);
+        return stream;
+    }
+    stream >> key.k >> key.h >> key.x >> key.y;
+    if (key.k <= 0 || key.h < 1)
+    {
+        stream.setStatus(QDataStream::ReadCorruptData);
+    }
+    return stream;
+}
+
 } //IChirikov
