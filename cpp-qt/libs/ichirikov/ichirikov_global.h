@@ -27,13 +27,13 @@
 
 namespace IChirikov {
 
-struct Key
+struct ICHIRIKOV_EXPORT Key
 {
     qreal k, h, x, y;
 };
 
-extern QDataStream& operator<<(QDataStream& stream, const Key& key);
-extern QDataStream& operator>>(QDataStream& stream, Key& key);
+ICHIRIKOV_EXPORT QDataStream& operator<<(QDataStream& stream, const Key& key);
+ICHIRIKOV_EXPORT QDataStream& operator>>(QDataStream& stream, Key& key);
 
 }
 

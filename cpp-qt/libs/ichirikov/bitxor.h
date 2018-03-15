@@ -25,13 +25,13 @@ namespace IChirikov {
 
 namespace BitXor {
 
-extern QImage encrypt(const QImage& img, qreal k, qreal h, qreal x, qreal y);
+ICHIRIKOV_EXPORT QImage encrypt(const QImage& img, qreal k, qreal h, qreal x, qreal y);
 inline QImage encrypt(const QImage& img, const Key& key)
 {
     return encrypt(img,key.k,key.h,key.x,key.y);
 }
 
-extern QImage decrypt(const QImage& img, qreal k, qreal h, qreal x, qreal y);
+ICHIRIKOV_EXPORT QImage decrypt(const QImage& img, qreal k, qreal h, qreal x, qreal y);
 inline QImage decrypt(const QImage& img, const Key& key)
 {
     return decrypt(img,key.k,key.h,key.x,key.y);
