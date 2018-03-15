@@ -17,10 +17,58 @@
 
 #include "bitxor.h"
 #include "shuttle.h"
+#include <functional>
+#include <utility>
+#include <cmath>
+#include <limits>
 
 namespace IChirikov {
 
+using ::std::tie;
+using ::std::abs;
+
+using Pos = ::std::tuple<qreal,qreal>;
+
+static constexpr qreal Pi = 3.14159265358979323846;
+
+static inline auto iChirikov(qreal k, qreal h)
+{
+    using ::std::fmod;
+    Q_ASSUME(k>0);
+    Q_ASSUME(h>1);
+    return [k,h](qreal x0, qreal y0)->Pos{
+        qreal x, y;
+        x = fmod(k*sin(y0)+x0,2*Pi);
+        y = fmod(h*y0+x,2*Pi);
+        return ::std::make_tuple(x,y);
+    };
+}
+
 namespace BitXor {
+
+QImage encrypt(const QImage& img, qreal k, qreal h, qreal x, qreal y)
+{
+    QImage encrypted(img);
+    const auto byteCount = encrypted.sizeInBytes();
+    const uchar max = ::std::numeric_limits<uchar>::max();
+    uchar* data = encrypted.bits();
+    k = abs(k);
+    h = abs(h-1)+1;
+    auto map = iChirikov(k,h);
+    qreal x0, y0;
+    for(int i=0; i<byteCount; ++i)
+    {
+        x0=x; y0=y;
+        tie(x,y) = map(x0,y0);
+        data[i] ^= static_cast<uchar>(max*x0/(2*Pi));
+    }
+    return encrypted;
+}
+
+QImage decrypt(const QImage& img, qreal k, qreal h, qreal x, qreal y)
+{
+    return encrypt(img,k,h,x,y);
+}
 
 } //BitXor
 
