@@ -74,6 +74,26 @@ QImage decrypt(const QImage& img, qreal k, qreal h, qreal x, qreal y)
 
 namespace Shuttle {
 
+QImage encrypt(const QImage& img, qreal k, qreal h, qreal x, qreal y)
+{
+    QImage encrypted(img);
+    Q_UNUSED(k);
+    Q_UNUSED(h);
+    Q_UNUSED(x);
+    Q_UNUSED(y);
+    return encrypted;
+}
+
+QImage decrypt(const QImage& img, qreal k, qreal h, qreal x, qreal y)
+{
+    QImage decrypted(img);
+    Q_UNUSED(k);
+    Q_UNUSED(h);
+    Q_UNUSED(x);
+    Q_UNUSED(y);
+    return decrypted;
+}
+
 } //Shuttle
 
 constexpr quint32 KeyMask = 0xFFCBC5D9u;
