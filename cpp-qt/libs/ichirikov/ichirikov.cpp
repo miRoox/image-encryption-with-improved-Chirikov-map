@@ -50,7 +50,7 @@ QImage encrypt(const QImage& img, qreal k, qreal h, qreal x, qreal y)
 {
     QImage encrypted(img);
     const auto byteCount = encrypted.sizeInBytes();
-    const uchar max = ::std::numeric_limits<uchar>::max();
+    constexpr uchar max = ::std::numeric_limits<uchar>::max();
     uchar* data = encrypted.bits();
     k = abs(k);
     h = abs(h-1)+1;
