@@ -150,7 +150,10 @@ IChirikov::Key CommandLineProcessor::getKey()
 
         QSaveFile* keyFile = new QSaveFile(fileName,this);
         connect(this,&CommandLineProcessor::processed,
-                keyFile,&QSaveFile::commit);
+                [keyFile]{
+            if (!keyFile->commit())
+                qFatal("Writing key file failed.");
+        });
         writeKeyToFile(key.value(),keyFile);
     }
     if (!key)
@@ -191,7 +194,10 @@ void CommandLineProcessor::writeOutputImage(const QImage& output)
         }
         QSaveFile* outputFile = new QSaveFile(fileName,this);
         connect(this,&CommandLineProcessor::processed,
-                outputFile,&QSaveFile::commit);
+                [outputFile]{
+            if (!outputFile->commit())
+                qFatal("Writing output file failed.");
+        });
         if (!outputFile->open(QIODevice::WriteOnly))
         {
             qFatal(qUtf8Printable(outputFile->errorString()));
