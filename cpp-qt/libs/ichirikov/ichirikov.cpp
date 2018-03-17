@@ -44,11 +44,54 @@ static inline auto iChirikov(qreal k, qreal h)
     };
 }
 
+static QImage convertToNoUnusedBitImage(const QImage& img)
+{
+    switch (img.format())
+    {
+    case QImage::Format_Indexed8:
+        if (img.colorCount() != 0x100)
+        {
+            return img.convertToFormat(QImage::Format_RGB888);
+        }
+        break;
+    case QImage::Format_RGB32:
+    case QImage::Format_RGB666:
+    case QImage::Format_RGB555:
+    case QImage::Format_RGB444:
+    case QImage::Format_RGBX8888:
+    case QImage::Format_BGR30:
+    case QImage::Format_RGB30:
+        return img.convertToFormat(QImage::Format_RGB888);
+    case QImage::Format_ARGB8555_Premultiplied:
+        return img.convertToFormat(QImage::Format_ARGB32);
+    default:
+        break;
+    }
+    return img;
+}
+
+static QImage recoverImageFormat(const QImage& img, QImage::Format format)
+{
+    switch (format)
+    {
+    case QImage::Format_Indexed8:
+        if (img.format() != QImage::Format_Indexed8)
+        {
+            qWarning("Cannot recover to the original image format.");
+            return img;
+        }
+        break;
+    default:
+        break;
+    }
+    return img.convertToFormat(format);
+}
+
 namespace BitXor {
 
 QImage encrypt(const QImage& img, qreal k, qreal h, qreal x, qreal y)
 {
-    QImage encrypted(img);
+    QImage encrypted = convertToNoUnusedBitImage(img);
     const auto byteCount = encrypted.sizeInBytes();
     constexpr uchar max = ::std::numeric_limits<uchar>::max();
     uchar* data = encrypted.bits();
@@ -62,7 +105,7 @@ QImage encrypt(const QImage& img, qreal k, qreal h, qreal x, qreal y)
         tie(x,y) = map(x0,y0);
         data[i] ^= static_cast<uchar>(max*x0/(2*Pi));
     }
-    return encrypted;
+    return recoverImageFormat(encrypted,img.format());
 }
 
 QImage decrypt(const QImage& img, qreal k, qreal h, qreal x, qreal y)
