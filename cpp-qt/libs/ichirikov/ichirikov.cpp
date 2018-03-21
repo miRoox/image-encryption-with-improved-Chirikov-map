@@ -48,6 +48,9 @@ static QImage convertToNoUnusedBitImage(const QImage& img)
 {
     switch (img.format())
     {
+    case QImage::Format_Mono:
+    case QImage::Format_MonoLSB:
+        return img.convertToFormat(QImage::Format_Grayscale8);
     case QImage::Format_Indexed8:
         if (img.colorCount() != 0x100)
         {
@@ -74,6 +77,9 @@ static QImage recoverImageFormat(const QImage& img, QImage::Format format)
 {
     switch (format)
     {
+    case QImage::Format_Mono:
+    case QImage::Format_MonoLSB:
+        return img;
     case QImage::Format_Indexed8:
         if (img.format() != QImage::Format_Indexed8)
         {
