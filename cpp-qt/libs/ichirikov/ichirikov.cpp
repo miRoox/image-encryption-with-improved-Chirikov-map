@@ -20,6 +20,7 @@
 #include <functional>
 #include <utility>
 #include <cmath>
+#include <climits>
 #include <limits>
 
 namespace IChirikov {
@@ -31,15 +32,31 @@ using Pos = ::std::tuple<qreal,qreal>;
 
 static constexpr qreal Pi = 3.14159265358979323846;
 
+static inline qreal mod(qreal x, qreal y)
+{
+    return ::std::fmod(::std::fabs(x),::std::fabs(y));
+}
+
 static inline auto iChirikov(qreal k, qreal h)
 {
-    using ::std::fmod;
     Q_ASSUME(k>0);
     Q_ASSUME(h>1);
     return [k,h](qreal x0, qreal y0)->Pos{
         qreal x, y;
-        x = fmod(k*sin(y0)+x0,2*Pi);
-        y = fmod(h*y0+x,2*Pi);
+        x = mod(k*sin(y0)+x0,2*Pi);
+        y = mod(h*y0+x,2*Pi);
+        return ::std::make_tuple(x,y);
+    };
+}
+
+static inline auto inverseIChirikov(qreal k, qreal h)
+{
+    Q_ASSUME(k>0);
+    Q_ASSUME(h>1);
+    return [k,h](qreal x0, qreal y0)->Pos{
+        qreal x, y;
+        y = mod((y0-x0)/h,2*Pi);
+        x = mod(x0-k*sin(y),2*Pi);
         return ::std::make_tuple(x,y);
     };
 }
@@ -123,24 +140,76 @@ QImage decrypt(const QImage& img, qreal k, qreal h, qreal x, qreal y)
 
 namespace Shuttle {
 
+static inline bool testBit(uchar byte, ::std::size_t pos)
+{
+    Q_ASSUME(pos<CHAR_BIT);
+    return byte & (1<<pos);
+}
+
+static inline void setBit(uchar& byte, ::std::size_t pos, bool set)
+{
+    Q_ASSUME(pos<CHAR_BIT);
+    if (set)
+        byte |= (1<<pos);
+    else
+        byte &= ~(1<<pos);
+}
+
+static inline void bitSwap(uchar* data, ::std::size_t pos1, ::std::size_t pos2)
+{
+    static_assert(CHAR_BIT==8,"Number of bits in byte should be 8");
+    if (pos1 == pos2 || data[pos1>>3] == data[pos2>>3])
+        return;
+    bool tmp = testBit(data[pos1>>3],pos1&0b111);
+    setBit(data[pos1>>3],pos1&0b111,testBit(data[pos2>>3],pos2&0b111));
+    setBit(data[pos2>>3],pos2&0b111,tmp);
+}
+
 QImage encrypt(const QImage& img, qreal k, qreal h, qreal x, qreal y)
 {
-    QImage encrypted(img);
-    Q_UNUSED(k);
-    Q_UNUSED(h);
-    Q_UNUSED(x);
-    Q_UNUSED(y);
-    return encrypted;
+    QImage encrypted = convertToNoUnusedBitImage(img);
+    const auto bitCount = CHAR_BIT*encrypted.sizeInBytes();
+    uchar* data = encrypted.bits();
+    k = abs(k);
+    h = abs(h-1)+1;
+    auto map = iChirikov(k,h);
+    qDebug("Begin x:%f y:%f",x,y);
+    qreal x0, y0;
+    for(int i=0; i<bitCount; ++i)
+    {
+        x0=x; y0=y;
+        tie(x,y) = map(x0,y0);
+        bitSwap(data,x0/(2*Pi)*bitCount,y0/(2*Pi)*bitCount);
+    }
+    qDebug("Final x:%f y:%f",x0,y0);
+    return recoverImageFormat(encrypted,img.format());
 }
 
 QImage decrypt(const QImage& img, qreal k, qreal h, qreal x, qreal y)
 {
-    QImage decrypted(img);
-    Q_UNUSED(k);
-    Q_UNUSED(h);
-    Q_UNUSED(x);
-    Q_UNUSED(y);
-    return decrypted;
+    QImage decrypted = convertToNoUnusedBitImage(img);
+    const auto bitCount = decrypted.sizeInBytes();
+    k = abs(k);
+    h = abs(h-1)+1;
+    auto map = iChirikov(k,h);
+    qreal x0, y0;
+    for(int i=0; i<bitCount; ++i)
+    {
+        x0=x; y0=y;
+        tie(x,y) = map(x0,y0);
+    }
+    qDebug("Begin x:%f y:%f",x0,y0);
+
+    uchar* data = decrypted.bits();
+    auto imap = inverseIChirikov(k,h);
+    for(int i=0; i<bitCount; ++i)
+    {
+        x0=x; y0=y;
+        tie(x,y) = imap(x0,y0);
+        bitSwap(data,x/(2*Pi)*bitCount,y/(2*Pi)*bitCount);
+    }
+    qDebug("Final x:%f y:%f",x,y);
+    return recoverImageFormat(decrypted,img.format());
 }
 
 } //Shuttle
