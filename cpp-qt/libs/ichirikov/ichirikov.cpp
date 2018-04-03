@@ -22,6 +22,7 @@
 #include <cmath>
 #include <climits>
 #include <limits>
+#include <algorithm>
 #include <QDataStream>
 
 namespace IChirikov {
@@ -46,18 +47,6 @@ static inline auto iChirikov(qreal k, qreal h)
         qreal x, y;
         x = mod(k*sin(y0)+x0,2*Pi);
         y = mod(h*y0+x,2*Pi);
-        return ::std::make_tuple(x,y);
-    };
-}
-
-static inline auto inverseIChirikov(qreal k, qreal h)
-{
-    Q_ASSUME(k>0);
-    Q_ASSUME(h>1);
-    return [k,h](qreal x0, qreal y0)->Pos{
-        qreal x, y;
-        y = mod((y0-x0)/h,2*Pi);
-        x = mod(x0-k*sin(y),2*Pi);
         return ::std::make_tuple(x,y);
     };
 }
@@ -174,42 +163,38 @@ QImage encrypt(const QImage& img, qreal k, qreal h, qreal x, qreal y)
     k = abs(k);
     h = abs(h-1)+1;
     auto map = iChirikov(k,h);
-    qDebug("Begin x:%f y:%f",x,y);
     qreal x0, y0;
-    for(int i=0; i<bitCount; ++i)
+    for(int i=0; i<2*bitCount; ++i)
     {
         x0=x; y0=y;
         tie(x,y) = map(x0,y0);
         bitSwap(data,x0/(2*Pi)*bitCount,y0/(2*Pi)*bitCount);
     }
-    qDebug("Final x:%f y:%f",x0,y0);
     return recoverImageFormat(encrypted,img.format());
 }
 
 QImage decrypt(const QImage& img, qreal k, qreal h, qreal x, qreal y)
 {
     QImage decrypted = convertToNoUnusedBitImage(img);
-    const auto bitCount = decrypted.sizeInBytes();
+    const auto bitCount = CHAR_BIT*decrypted.sizeInBytes();
     k = abs(k);
     h = abs(h-1)+1;
     auto map = iChirikov(k,h);
     qreal x0, y0;
-    for(int i=0; i<bitCount; ++i)
+    QVector<Pos> toSwap;
+    toSwap.reserve(2*bitCount);
+    for(int i=0; i<2*bitCount; ++i)
     {
         x0=x; y0=y;
         tie(x,y) = map(x0,y0);
+        toSwap.append(::std::make_tuple(x0,y0));
     }
-    qDebug("Begin x:%f y:%f",x0,y0);
-
     uchar* data = decrypted.bits();
-    auto imap = inverseIChirikov(k,h);
-    for(int i=0; i<bitCount; ++i)
-    {
-        x0=x; y0=y;
-        tie(x,y) = imap(x0,y0);
+    ::std::for_each(toSwap.crbegin(),toSwap.crend(),[data,bitCount](const Pos& pos){
+        qreal x, y;
+        tie(x,y) = pos;
         bitSwap(data,x/(2*Pi)*bitCount,y/(2*Pi)*bitCount);
-    }
-    qDebug("Final x:%f y:%f",x,y);
+    });
     return recoverImageFormat(decrypted,img.format());
 }
 
