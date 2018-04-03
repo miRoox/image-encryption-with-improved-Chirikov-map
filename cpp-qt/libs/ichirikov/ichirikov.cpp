@@ -22,6 +22,7 @@
 #include <cmath>
 #include <climits>
 #include <limits>
+#include <QDataStream>
 
 namespace IChirikov {
 
@@ -158,7 +159,7 @@ static inline void setBit(uchar& byte, ::std::size_t pos, bool set)
 static inline void bitSwap(uchar* data, ::std::size_t pos1, ::std::size_t pos2)
 {
     static_assert(CHAR_BIT==8,"Number of bits in byte should be 8");
-    if (pos1 == pos2 || data[pos1>>3] == data[pos2>>3])
+    if (pos1 == pos2)
         return;
     bool tmp = testBit(data[pos1>>3],pos1&0b111);
     setBit(data[pos1>>3],pos1&0b111,testBit(data[pos2>>3],pos2&0b111));
