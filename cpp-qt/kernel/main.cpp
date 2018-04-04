@@ -55,9 +55,12 @@ void messageOutput(QtMsgType type, const QMessageLogContext& context, const QStr
 {
     QMutexLocker locker(&messageMutex);
     QString format = qFormatLogMessage(type,context,msg);
-    std::fputs(qUtf8Printable(format),stderr);
-    std::fputc('\n',stderr);
-    std::fflush(stderr);
+    FILE* out = stderr;
+    if (type == QtInfoMsg)
+        out = stdout;
+    std::fputs(qUtf8Printable(format),out);
+    std::fputc('\n',out);
+    std::fflush(out);
     if (type == QtFatalMsg)
     {
         locker.unlock();
