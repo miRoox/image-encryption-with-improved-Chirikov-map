@@ -145,14 +145,25 @@ static inline void setBit(uchar& byte, ::std::size_t pos, bool set)
         byte &= ~(1<<pos);
 }
 
-static inline void bitSwap(uchar* data, ::std::size_t pos1, ::std::size_t pos2)
+static inline bool testBit(const uchar* data, ::std::size_t pos)
 {
     static_assert(CHAR_BIT==8,"Number of bits in byte should be 8");
+    return testBit(data[pos>>3],pos&0b111);
+}
+
+static inline void setBit(uchar* data, ::std::size_t pos, bool set)
+{
+    static_assert(CHAR_BIT==8,"Number of bits in byte should be 8");
+    return setBit(data[pos>>3],pos&0b111,set);
+}
+
+static inline void bitSwap(uchar* data, ::std::size_t pos1, ::std::size_t pos2)
+{
     if (pos1 == pos2)
         return;
-    bool tmp = testBit(data[pos1>>3],pos1&0b111);
-    setBit(data[pos1>>3],pos1&0b111,testBit(data[pos2>>3],pos2&0b111));
-    setBit(data[pos2>>3],pos2&0b111,tmp);
+    bool tmp = testBit(data,pos1);
+    setBit(data,pos1,testBit(data,pos2));
+    setBit(data,pos2,tmp);
 }
 
 QImage encrypt(const QImage& img, qreal k, qreal h, qreal x, qreal y)
