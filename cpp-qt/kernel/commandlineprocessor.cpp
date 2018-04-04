@@ -19,6 +19,7 @@
 #include "ichirikov/bitxor.h"
 #include "ichirikov/shuttle.h"
 #include <cstdlib>
+#include <ctime>
 #include <random>
 #include <QString>
 #include <QStringList>
@@ -265,11 +266,36 @@ void writeKeyToFile(const IChirikov::Key& key, QSaveFile* file)
     }
 }
 
+struct RandomSeedGen
+{
+    using result_type = std::mt19937::result_type;
+
+    RandomSeedGen()
+    {
+        std::srand(std::time(0));
+    }
+
+    result_type operator()()
+    {
+        result_type seed;
+        std::random_device rd;
+        if (rd.entropy() == 0.0)
+        {
+            seed = std::rand();
+        }
+        else
+        {
+            seed = rd();
+        }
+        return seed;
+    }
+};
+
 IChirikov::Key randomGenerateKey()
 {
     static constexpr qreal Pi = 3.14159265358979323846;
-    std::random_device rd;
-    std::mt19937 gen(rd());
+    static RandomSeedGen seed;
+    std::mt19937 gen(seed());
     std::lognormal_distribution<qreal> d1(1.6, 1);
     std::normal_distribution<qreal> d2(Pi,Pi/3);
     IChirikov::Key key;
