@@ -17,6 +17,7 @@
 
 #include "commandlineprocessor.h"
 #include <QCoreApplication>
+#include <QObject>
 #include <QString>
 #include <QMutex>
 #include <QMutexLocker>
@@ -24,6 +25,8 @@
 #include <cstdio>
 
 void messageOutput(QtMsgType type, const QMessageLogContext& context, const QString& msg);
+
+static QObject objectContainer;
 
 int main(int argc, char* argv[])
 {
@@ -43,8 +46,8 @@ int main(int argc, char* argv[])
     app.setApplicationVersion(VERSION_STR);
     app.setApplicationName(APP_FULL_NAME);
 
-    CommandLineProcessor processor;
-    processor.process(app.arguments());
+    auto processor = new CommandLineProcessor(&objectContainer);
+    processor->process(app.arguments());
 
     return EXIT_SUCCESS;
 }
