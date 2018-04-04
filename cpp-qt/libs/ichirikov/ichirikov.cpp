@@ -147,14 +147,12 @@ static inline void setBit(uchar& byte, ::std::size_t pos, bool set)
 
 static inline bool testBit(const uchar* data, ::std::size_t pos)
 {
-    static_assert(CHAR_BIT==8,"Number of bits in byte should be 8");
-    return testBit(data[pos>>3],pos&0b111);
+    return testBit(data[pos/CHAR_BIT],pos%CHAR_BIT);
 }
 
 static inline void setBit(uchar* data, ::std::size_t pos, bool set)
 {
-    static_assert(CHAR_BIT==8,"Number of bits in byte should be 8");
-    return setBit(data[pos>>3],pos&0b111,set);
+    return setBit(data[pos/CHAR_BIT],pos%CHAR_BIT,set);
 }
 
 static inline void bitSwap(uchar* data, ::std::size_t pos1, ::std::size_t pos2)
