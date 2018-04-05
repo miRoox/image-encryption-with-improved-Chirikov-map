@@ -4,6 +4,10 @@ TARGET = IChirikov
 
 include(../../universal.pri)
 
+win32 {
+    DLLDESTDIR = $$BIN_PATH
+}
+
 DESTDIR = $$LIBRARY_PATH
 
 TARGET = $$qtLibraryTarget($$TARGET)
