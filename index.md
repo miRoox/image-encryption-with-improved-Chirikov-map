@@ -3,7 +3,7 @@ title: "基于改进的Chirikov映射的彩色图像加密算法"
 description: "基于改进的Chirikov映射的彩色图像加密算法"
 ---
 
-{% assign resource_url = "https://github.com/miRoox/image-encryption-with-improved-Chirikov-map/raw/master/resource" %}
+{% assign resource_url = "https://github.com/miRoox/image-encryption-with-improved-Chirikov-map/raw/gh-pages/resource" %}
 
 这是学校创新研修课程项目报告。
 
